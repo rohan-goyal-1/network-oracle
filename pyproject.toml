@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "network-oracle"
+version = "0.1.0"
+description = "Simulation code for shared-oracle effects in network epistemology."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.24",
+    "networkx>=3.0",
+    "pandas>=2.0",
+    "matplotlib>=3.6",
+]
+
+[project.optional-dependencies]
+plots = ["seaborn>=0.13.2"]
+
+[project.scripts]
+network-oracle-experiments = "network_oracle.experiments.cli:main"
+network-oracle-figures = "network_oracle.figures.cli:main"
+network-oracle-diagnostics = "network_oracle.diagnostics:main"
+
+[tool.setuptools.packages.find]
+include = ["network_oracle*"]

@@ -14,12 +14,25 @@ source converts independent errors into correlated ones and can suppress the
 transient diversity that communities rely on to self-correct.
 
 ```
-config.py        shared base problem regime used by every study
-model.py         one simulation run: agents, networks, oracle, convergence
-runs.py          repeated runs, parallel Monte Carlo summaries, histories
-experiments.py   staged studies; writes CSV/NPZ to results/
-analysis.py      reads results/ and writes figures to figures/
-requirements.txt numpy, networkx, pandas, matplotlib
+network_oracle/
+  config.py             shared base problem regime used by every study
+  model.py              one simulation run: agents, oracle, convergence
+  networks.py           topology construction and neighbourhood matrices
+  metrics.py            small observables used by histories and summaries
+  monte_carlo.py        repeated runs, parallel summaries, histories
+  experiments/
+    study0_baseline.py
+    study1_frozen_oracle.py
+    study2_live_oracle.py
+    study3_trust.py
+  figures/
+    style.py            shared publication style
+    study0.py ...       one plotting module per study
+
+experiments.py          compatibility launcher for running studies
+analysis.py             compatibility launcher for generating figures
+model.py                compatibility launcher for model diagnostics
+requirements.txt        NumPy, NetworkX, pandas, matplotlib
 ```
 
 ## Install
@@ -71,22 +84,28 @@ python analysis.py     --study 3
 ```
 
 To change the underlying problem regime for **every** study (difficulty,
-community size, trials per round, etc.), edit `BASE_PROBLEM` in `config.py`.
+community size, trials per round, etc.), edit `BASE_PROBLEM` in
+`network_oracle/config.py`.
 
 ## Project flow
 
-The code is intentionally flat and small:
+The code is organized around the research workflow:
 
-1. `model.py` defines the scientific mechanism for a single community.
-2. `runs.py` repeats that mechanism across random seeds and returns summaries.
-3. `experiments.py` defines the study grids and writes tidy result files.
-4. `analysis.py` turns those result files into figures.
+1. `network_oracle/model.py` defines the mechanism for one community.
+2. `network_oracle/networks.py` owns graph construction.
+3. `network_oracle/monte_carlo.py` repeats runs across seeds and summarizes
+   outcomes.
+4. `network_oracle/experiments/study*.py` defines parameter grids and writes
+   result files.
+5. `network_oracle/figures/study*.py` turns those result files into figures,
+   using the common visual system in `network_oracle/figures/style.py`.
 
-To add a new study, add one `studyN(...)` function in `experiments.py`, register
-it in the CLI map at the bottom of that file, and add the matching figure
-function in `analysis.py` only if the study needs a new plot. To change the
-behavior of agents or oracles, work in `model.py`; to change replication,
-parallelism, or output summaries, work in `runs.py`.
+To add a new study, create a `network_oracle/experiments/study4_*.py` module,
+register it in `network_oracle/experiments/cli.py`, and add a matching
+`network_oracle/figures/study4.py` only if it needs new plots. To change agent
+or oracle behavior, work in `network_oracle/model.py`; to add a topology, work
+in `network_oracle/networks.py`; to change replication, parallelism, or output
+summaries, work in `network_oracle/monte_carlo.py`.
 
 ### What each study does
 
