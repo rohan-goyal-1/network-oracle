@@ -19,8 +19,8 @@ htmlcov/
 .ipynb_checkpoints/
 
 # Generated study outputs
-figures/
-results/
+# /figures/
+# /results/
 
 # Local smoke-test and scratch output
 tmp/
