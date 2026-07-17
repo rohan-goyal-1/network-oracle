@@ -2,17 +2,29 @@ from __future__ import annotations
 
 import argparse
 
-from network_oracle.experiments.study0_baseline import study0
-from network_oracle.experiments.study1_frozen_oracle import study1
-from network_oracle.experiments.study2_live_oracle import study2
-from network_oracle.experiments.study3_trust import study3
+from network_oracle.experiments.adaptive_feedback import run as adaptive_feedback
+from network_oracle.experiments.baseline_reliability import run as baseline
+from network_oracle.experiments.biased_trust import run as biased_trust
+from network_oracle.experiments.fixed_testimony import run as fixed_testimony
 
+RUNS = {
+    "baseline": baseline,
+    "fixed-testimony": fixed_testimony,
+    "adaptive-feedback": adaptive_feedback,
+    "biased-trust": biased_trust,
+}
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Run shared-oracle network-epistemology studies."
+        description="Run shared-oracle network-epistemology simulations."
     )
-    parser.add_argument("--study", default="all", choices=["0", "1", "2", "3", "all"])
+    parser.add_argument(
+        "--run",
+        dest="run_name",
+        default="all",
+        metavar="{baseline,fixed-testimony,adaptive-feedback,biased-trust,all}",
+        help="simulation block to run",
+    )
     parser.add_argument("--out", default="results")
     parser.add_argument(
         "--seeds",
@@ -26,10 +38,16 @@ def main() -> None:
     if args.quick and args.seeds == 300:
         args.seeds = 60
 
-    studies = {"0": study0, "1": study1, "2": study2, "3": study3}
-    todo = ["0", "1", "2", "3"] if args.study == "all" else [args.study]
-    for study in todo:
-        studies[study](args.out, args.seeds, args.jobs, quick=args.quick)
+    if args.run_name == "all":
+        todo = list(RUNS)
+    elif args.run_name in RUNS:
+        todo = [args.run_name]
+    else:
+        choices = ", ".join([*RUNS, "all"])
+        parser.error(f"unknown run '{args.run_name}' (choose from {choices})")
+
+    for run_name in todo:
+        RUNS[run_name](args.out, args.seeds, args.jobs, quick=args.quick)
         print()
 
 

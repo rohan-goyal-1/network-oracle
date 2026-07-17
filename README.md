@@ -1,36 +1,39 @@
-# The shared-oracle problem in network epistemology
+# Shared-oracle dynamics in network epistemology
 
-Simulation code for studying what happens to a community of inquirers when they
-can all consult the **same imperfect source** (an "oracle" — a stand-in for an
-AI system, search engine, or shared model that everyone queries). It extends the
-Zollman / Bala–Goyal networked two-armed-bandit model of collective inquiry with
-a shared-oracle layer and asks: does the oracle help the community converge on
-the truth, or does the correlated error it injects — plus the exploration it
-discourages — make the community converge faster on a confident falsehood?
+Simulation code for asking what happens when a community of inquirers can all
+consult the **same imperfect source**: an AI system, search engine, shared model,
+or other common testimony channel. The model extends the Zollman / Bala-Goyal
+networked two-armed-bandit framework with a shared-oracle layer and tests when
+the source helps a community converge on the truth, when correlated error makes
+it converge confidently on a falsehood, and when feedback suppresses the
+exploration needed for correction.
 
-The central thesis the code lets you test: **reliability is an individual-level
-virtue that does not automatically transfer to collective inquiry.** A shared
-source converts independent errors into correlated ones and can suppress the
-transient diversity that communities rely on to self-correct.
+The central claim this code lets you probe is: **reliability is an
+individual-level virtue that does not automatically transfer to collective
+inquiry.** A shared source can convert independent errors into correlated ones
+and can reduce the transient diversity communities rely on to self-correct.
 
 ```
 network_oracle/
-  config.py             shared base problem regime used by every study
+  config.py             shared base problem regime
   model.py              one simulation run: agents, oracle, convergence
   networks.py           topology construction and neighbourhood matrices
-  metrics.py            small observables used by histories and summaries
+  metrics.py            observables used by histories and summaries
   monte_carlo.py        repeated runs, parallel summaries, histories
   experiments/
-    study0_baseline.py
-    study1_frozen_oracle.py
-    study2_live_oracle.py
-    study3_trust.py
+    baseline_reliability.py
+    fixed_testimony.py
+    adaptive_feedback.py
+    biased_trust.py
   figures/
     style.py            shared publication style
-    study0.py ...       one plotting module per study
+    baseline_reliability.py
+    fixed_testimony.py
+    adaptive_feedback.py
+    biased_trust.py
 
-experiments.py          compatibility launcher for running studies
-analysis.py             compatibility launcher for generating figures
+experiments.py          compatibility launcher for simulations
+analysis.py             compatibility launcher for figures
 model.py                compatibility launcher for model diagnostics
 requirements.txt        NumPy, NetworkX, pandas, matplotlib
 ```
@@ -41,202 +44,153 @@ requirements.txt        NumPy, NetworkX, pandas, matplotlib
 pip install -r requirements.txt
 ```
 
-Python 3.9+ . Everything is plain NumPy + NetworkX and runs on a laptop CPU.
+Python 3.9+ is enough. Everything is plain NumPy, NetworkX, pandas, and
+matplotlib, and runs on a laptop CPU.
 
-## Quick start
+## Quick Start
 
-A tiny end-to-end smoke test (small grids, few seeds, ~1–2 minutes):
+A tiny end-to-end smoke test:
 
 ```bash
-python experiments.py --study all --quick --jobs 4
-python analysis.py     --study all
+python experiments.py --run all --quick --jobs 4
+python analysis.py --run all
 ```
 
-A sanity check of the engine itself (reproduces the Zollman effect and the
-core oracle effects, printing numbers to the terminal):
+A diagnostic check of the engine itself:
 
 ```bash
 python model.py
 ```
 
-## Running the studies
+## Publication Runs
 
-Each study writes result files to `results/`; the matching `analysis.py` call
-reads them and writes figures to `figures/`. Use more seeds for publication-grade
-confidence intervals (300 is a reasonable default; 1000+ tightens the bands).
+Each simulation writes result files to `results/`; the matching figure command
+reads them and writes high-resolution PNG and PDF files to `figures/`. Use more
+seeds for publication-grade confidence intervals. `300` is a reasonable working
+default; `1000+` gives tighter bands when runtime permits.
 
 ```bash
-# Study 0 — replication & robustness map
-python experiments.py --study 0 --seeds 300 --jobs 4
-python analysis.py     --study 0
+# Baseline network reliability
+python experiments.py --run baseline --seeds 300 --jobs 4
+python analysis.py --run baseline
 
-# Study 1 — frozen oracle: the core sweep
-python experiments.py --study 1 --seeds 300 --jobs 4
-python analysis.py     --study 1
+# Fixed shared testimony
+python experiments.py --run fixed-testimony --seeds 300 --jobs 4
+python analysis.py --run fixed-testimony
 
-# Study 2 — live oracle: feedback & collapse
-python experiments.py --study 2 --seeds 300 --jobs 4
-python analysis.py     --study 2
+# Adaptive feedback
+python experiments.py --run adaptive-feedback --seeds 300 --jobs 4
+python analysis.py --run adaptive-feedback
 
-# Study 3 — biased oracle, endogenous trust, robustness
-python experiments.py --study 3 --seeds 300 --jobs 4
-python analysis.py     --study 3
+# Biased testimony and adaptive trust
+python experiments.py --run biased-trust --seeds 300 --jobs 4
+python analysis.py --run biased-trust
 ```
 
-To change the underlying problem regime for **every** study (difficulty,
-community size, trials per round, etc.), edit `BASE_PROBLEM` in
-`network_oracle/config.py`.
+To regenerate everything:
 
-## Project flow
+```bash
+python experiments.py --run all --seeds 300 --jobs 4
+python analysis.py --run all
+```
 
-The code is organized around the research workflow:
+Change the shared problem regime for every simulation block by editing
+`BASE_PROBLEM` in `network_oracle/config.py`.
 
-1. `network_oracle/model.py` defines the mechanism for one community.
+## Simulation Blocks
+
+**Baseline network reliability.** Reliability and speed across topology
+(`complete`, `cycle`, `wheel`, Erdos-Renyi, small-world, scale-free), problem
+difficulty `epsilon`, and community size. This reproduces the Zollman transient
+diversity effect and maps where it holds.
+
+Files: `baseline_reliability.csv` -> `baseline_network_reliability.png/.pdf`
+
+**Fixed shared testimony.** A source points at the better arm with probability
+`r`; `r < 0.5` is systematically biased. This sweeps reliability, adoption
+fraction, and topology; contrasts shared with independent testimony; and compares
+the community against a lone-agent benchmark.
+
+Files: `fixed_testimony_grid.csv`, `shared_vs_independent_testimony.csv`,
+`single_agent_testimony.csv` -> `fixed_testimony_heatmaps.png/.pdf`,
+`shared_vs_independent_testimony.png/.pdf`,
+`individual_help_collective_harm.png/.pdf`
+
+**Adaptive feedback.** The oracle maintains its own posterior, updates each
+round from the community's pooled data, and rebroadcasts it. This closes the
+feedback loop and records exploration entropy, testing of the better arm, and
+oracle belief over time.
+
+Files: `adaptive_feedback_reliability.csv`,
+`adaptive_feedback_timeseries.npz` -> `adaptive_feedback_reliability.png/.pdf`,
+`exploration_entropy_collapse.png/.pdf`, `better_arm_exploration.png/.pdf`,
+`adaptive_oracle_lock_in.png/.pdf`
+
+**Biased testimony and adaptive trust.** A systematically biased shared source;
+whether agents can discipline it by withdrawing trust; the network-structure
+inversion; and a robustness sweep of the correlation penalty across difficulty,
+community size, and testimony weight.
+
+Files: `adaptive_trust_under_bias.csv`,
+`correlation_penalty_robustness.csv`, `adaptive_trust_trajectories.npz` ->
+`adaptive_trust_under_bias.png/.pdf`, `network_structure_inversion.png/.pdf`,
+`correlation_penalty_robustness.png/.pdf`,
+`adaptive_trust_trajectories.png/.pdf`
+
+## Project Flow
+
+1. `network_oracle/model.py` defines one community run.
 2. `network_oracle/networks.py` owns graph construction.
 3. `network_oracle/monte_carlo.py` repeats runs across seeds and summarizes
    outcomes.
-4. `network_oracle/experiments/study*.py` defines parameter grids and writes
-   result files.
-5. `network_oracle/figures/study*.py` turns those result files into figures,
+4. `network_oracle/experiments/*.py` defines parameter grids and writes result
+   files.
+5. `network_oracle/figures/*.py` turns those result files into paper figures,
    using the common visual system in `network_oracle/figures/style.py`.
 
-To add a new study, create a `network_oracle/experiments/study4_*.py` module,
-register it in `network_oracle/experiments/cli.py`, and add a matching
-`network_oracle/figures/study4.py` only if it needs new plots. To change agent
-or oracle behavior, work in `network_oracle/model.py`; to add a topology, work
-in `network_oracle/networks.py`; to change replication, parallelism, or output
-summaries, work in `network_oracle/monte_carlo.py`.
+To add a new simulation block, add a module under `network_oracle/experiments/`,
+register it in `network_oracle/experiments/cli.py`, and add a matching module
+under `network_oracle/figures/` when it needs new plots.
 
-### What each study does
-
-**Study 0 — replication & robustness map.** Reliability and speed across network
-topology (complete, cycle, wheel, Erdős–Rényi, small-world, scale-free), problem
-difficulty `epsilon`, and community size. Reproduces the Zollman "transient
-diversity" effect (sparser networks converge on the truth more often) and shows
-where it holds. *Files:* `study0.csv` → `study0_reliability.png`.
-
-**Study 1 — frozen oracle (the core).** A source that points at the better arm
-with probability `r` (its reliability; `r < 0.5` = biased). Sweeps reliability ×
-adoption fraction × topology, plus a shared-vs-independent contrast and a
-lone-agent benchmark. Produces the help/harm map, the **correlation penalty**
-(shared does worse than independent at equal reliability), and the
-**individually-helpful-but-collectively-harmful band**. *Files:*
-`study1_grid.csv`, `study1_sharedvsindep.csv`, `study1_isolated.csv` →
-`study1_heatmaps.png`, `study1_phase_and_band.png`,
-`study1_shared_vs_independent.png`.
-
-**Study 2 — live oracle (feedback).** The oracle maintains its own posterior,
-updated each round from the community's pooled data, and rebroadcasts it —
-closing a feedback loop. Compares reliability to none/frozen and records time
-series of exploration entropy and the oracle's confidence-vs-accuracy. Shows the
-**monoculture collapse**: exploration entropy falls to zero and the oracle's
-belief can freeze on a falsehood. *Files:* `study2_reliability.csv`,
-`study2_timeseries.npz` → `study2_reliability.png`,
-`study2_entropy_collapse.png`, `study2_oracle_freeze.png`,
-`study2_exploration.png`.
-
-**Study 3 — biased oracle, endogenous trust, robustness.** A systematically
-biased source; whether agents can "discipline" it by withdrawing trust as it
-disagrees with the evidence; the network-structure inversion; and a robustness
-sweep of the correlation penalty across difficulty, size, and trust. *Files:*
-`study3_endogenous.csv`, `study3_robustness.csv`, `study3_trust_traj.npz` →
-`study3_endogenous_trust.png`, `study3_network_inversion.png`,
-`study3_robustness.png`, `study3_trust_trajectories.png`.
-
-## What the code reproduces
-
-With the default regime (`epsilon = 0.05`, `n = 10`, 1 trial/round), 300 seeds:
-
-- **Zollman effect.** Complete graph ≈ 0.62 correct-consensus rate vs cycle
-  ≈ 0.86; the denser network converges on *falsehood* far more often.
-- **Frozen oracle is monotone in reliability.** A biased oracle (`r = 0.2`)
-  drags reliability *below* baseline (≈ 0.45); a reliable one (`r = 0.9`) lifts
-  it to ≈ 1.0.
-- **Correlation penalty.** At identical reliability `r = 0.6`, the shared
-  (correlated) oracle does measurably worse than independent draws.
-- **Live-oracle feedback collapse.** In runs that end wrong, the oracle's belief
-  crashes below the indifference line and freezes there for the rest of the run —
-  permanent lock-in on the worse arm.
-- **Network-structure inversion.** A biased *shared* oracle devastates the sparse
-  cycle (reliability → ~0) far more than the dense complete graph: density helps
-  wash out a correlated bias, inverting the usual "sparser is better" ordering.
-
-These are illustrative, not universal — see the robustness note below.
-
-## Modeling choices (documented)
+## Modeling Choices
 
 - **Two-armed bandit with a known safe arm.** Arm A has known rate `p_safe`
-  (0.5); arm B's rate `p_safe + epsilon` is unknown and better. Agents hold a
-  Beta posterior over B and pull the arm they currently judge better; pulling A
-  is uninformative about B, so a community can prematurely abandon B. Agents share
-  experimental **data** (not opinions) with network neighbours.
+  (`0.5`); arm B's rate is `p_safe + epsilon` and is unknown but better.
 - **The oracle as testimony folded into the posterior.** Each consultation adds
-  `oracle_tau` pseudo-observations of B at an "implied rate" encoding what the
-  oracle currently says. Belief and action are therefore the *same* quantity —
-  there is no decoupling between what an agent believes and how it acts. (An
-  alternative "decision-weight" oracle, which blends the oracle into the action
-  rule while leaving the evidence-based posterior untouched, was prototyped and
-  set aside because it decouples belief from action and complicates the outcome
-  measure; it is a reasonable **extension** if you want to separate "advice that
-  changes behaviour" from "testimony that changes belief.")
-- **Frozen vs live.** "Frozen" fixes the oracle's reliability over time (a
-  knowledge-cutoff analogue). "Live" updates the oracle from the community's data
-  and rebroadcasts (a continual-learning / retrieval analogue), creating the
-  feedback loop.
-- **Shared vs independent.** With `oracle_shared=True` all consulters get the
-  same endorsement within a round (the monoculture/correlation mechanism); with
-  `False` each draws independently (the contrast that isolates correlation from
-  mere noise).
+  `oracle_tau` pseudo-observations of B at an implied rate encoding the oracle's
+  endorsement.
+- **Fixed vs adaptive.** Fixed testimony has exogenous reliability. Adaptive
+  feedback updates the oracle from community data and rebroadcasts it.
+- **Shared vs independent.** With `oracle_shared=True`, all consulters get the
+  same endorsement within a round. With `False`, each draws independently.
 - **Convergence is judged on belief.** A run ends when all agents sit on the same
-  side of `p_safe` for `stable_rounds` consecutive rounds (or `max_rounds`), and
-  is classified `correct` / `incorrect` / `none` by the final beliefs.
-- **Endogenous trust** (Study 3) scales each consulter's `oracle_tau` by an EMA of
-  how often the oracle's endorsement has agreed with realized evidence; trust
-  falls toward zero for a clearly biased source — but only where exploration
-  survives to expose it. The effect is deliberately *not* tuned to look dramatic;
-  its weakness is part of the finding (a "suppression trap": a biased source that
-  stops the community exploring also stops it gathering the evidence that would
-  reveal the bias).
+  side of `p_safe` for `stable_rounds` consecutive rounds, or at `max_rounds`.
+- **Adaptive trust.** Consulters scale `oracle_tau` by an EMA of how often the
+  oracle agrees with realized evidence. It only works where exploration survives
+  long enough to expose bias.
 
-## A note on robustness (please read before drawing conclusions)
+## Robustness
 
-Results from this family of models are known to be **parameter-sensitive**
-(Rosenstock, Bruner & O'Connor 2017 showed the original "sparser is better"
-result is not robust across all parameter settings). Treat any single
-configuration as a *how-possibly* demonstration, not a prediction. Before
-claiming an effect, sweep `epsilon`, `n_agents`, `n_pulls`, `prior_strength`,
-and `oracle_tau` and report where the effect holds and where it reverses. The
-robustness sweep in Study 3 is a template for exactly this.
+Results in this family of models are parameter-sensitive. Treat a single
+configuration as a how-possibly demonstration, not a prediction. Before claiming
+an effect, sweep `epsilon`, `n_agents`, `n_pulls`, `prior_strength`, and
+`oracle_tau`, and report where the effect holds or reverses. The
+`biased-trust` block includes a compact robustness template.
 
-## Key parameters (`model.Params`)
+## Key Parameters
 
 | Parameter | Meaning |
 |---|---|
 | `n_agents`, `topology`, `topo_param` | community size and network structure |
-| `epsilon` | how much better arm B is (smaller = harder problem) |
+| `epsilon` | how much better arm B is |
 | `n_pulls` | Bernoulli trials per agent per round |
 | `prior_strength` | concentration of agents' Beta priors |
 | `oracle_kind` | `none` / `frozen` / `live` |
-| `oracle_r` | frozen reliability (P endorse the better arm; < 0.5 = biased) |
-| `oracle_tau` | trust = pseudo-observations added per consultation |
-| `oracle_h` | endorsement strength (implied success rate) |
-| `oracle_shared` | same endorsement to all consulters within a round? |
+| `oracle_r` | fixed reliability; `< 0.5` means biased |
+| `oracle_tau` | testimony weight in pseudo-observations |
+| `oracle_h` | endorsement strength |
+| `oracle_shared` | shared endorsement or independent endorsements |
 | `adoption_fraction` | fraction of agents who consult the oracle |
-| `consult_prob` | per-round probability an adopter consults |
-| `endogenous_trust`, `trust_learning_rate` | adaptive-trust mechanism (Study 3) |
-| `max_rounds`, `stable_rounds`, `consensus_threshold` | stopping & classification |
-
-## Extending the model
-
-Natural next steps the code is structured to support:
-
-- **Many oracles vs one** — add a small set of partially-correlated sources and
-  vary their correlation (monopoly vs oligopoly of sources).
-- **Tighter loops** — let the live oracle learn only from the agents who report
-  to it, or make it one of the networked agents.
-- **Testimony vs evidence** — implement the decision-weight oracle alongside the
-  current testimony oracle and compare.
-- **Richer problem structure** — replace the two arms with a many-armed bandit or
-  an epistemic landscape.
-- **LLM instantiation** — swap the synthetic oracle for an actual model queried
-  with the same protocol.
+| `consult_prob` | per-round consultation probability |
+| `endogenous_trust`, `trust_learning_rate` | adaptive-trust mechanism |
+| `max_rounds`, `stable_rounds`, `consensus_threshold` | stopping and classification |

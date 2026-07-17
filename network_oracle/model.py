@@ -89,7 +89,7 @@ class Params:
     oracle_init_obs: int = 0       # live oracle: prior pseudo-obs per arm (0 -> Beta(1,1))
     oracle_sees_all: bool = True   # live oracle learns from all B-pulls (else adopters only)
 
-    # --- endogenous trust (Study 3): consulters scale tau by observed oracle accuracy ---
+    # --- endogenous trust: consulters scale tau by observed oracle accuracy ---
     endogenous_trust: bool = False
     trust_learning_rate: float = 0.1
 

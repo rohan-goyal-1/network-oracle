@@ -1,4 +1,4 @@
-"""Small plotting helpers shared across study figures."""
+"""Small plotting helpers shared across paper figures."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from matplotlib.colors import Normalize
 import numpy as np
 import pandas as pd
 
-from network_oracle.figures.style import GRAY
+from network_oracle.figures.style import BAND_ALPHA, GRAY, line_style
 
 
 def _save(fig: plt.Figure, out: str, name: str) -> None:
@@ -59,8 +59,27 @@ def _plot_band(
     if stats is None:
         return
     mean, ci = stats
-    ax.fill_between(x, mean - ci, mean + ci, color=color, alpha=0.14, linewidth=0)
-    ax.plot(x, mean, color=color, label=label)
+    ax.fill_between(x, mean - ci, mean + ci, color=color, alpha=BAND_ALPHA, linewidth=0)
+    ax.plot(x, mean, label=label, **line_style(color, marker=None))
+
+
+def plot_curve(
+    ax: plt.Axes,
+    x,
+    y,
+    *,
+    color: str,
+    label: str,
+    se=None,
+    linestyle: str = "-",
+) -> None:
+    """Plot a paper-style curve, optionally with a standard-error band."""
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    if se is not None:
+        se = np.asarray(se, dtype=float)
+        ax.fill_between(x, y - se, y + se, color=color, alpha=BAND_ALPHA, linewidth=0)
+    ax.plot(x, y, label=label, **line_style(color, linestyle=linestyle))
 
 
 def _interpolate_grid(

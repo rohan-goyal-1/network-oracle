@@ -16,8 +16,18 @@ DOUBLE = (7.05, 3.00)
 BLUE = "#3B6FB6"
 ORANGE = "#D97732"
 GREEN = "#4C956C"
-GRAY = "#666666"
-LIGHT_GRAY = "#E5E5E5"
+GRAY = "#5F6368"
+LIGHT_GRAY = "#E8EAED"
+BLACK = "#202124"
+
+RELIABILITY_CMAP = "viridis"
+DIVERGING_CMAP = "RdBu_r"
+BAND_ALPHA = 0.14
+MARKER = "o"
+MARKER_FACE = "white"
+REFERENCE_LINEWIDTH = 0.75
+ERROR_LINEWIDTH = 0.7
+ERROR_CAPSIZE = 1.8
 
 TOPO_COLOR = {
     "complete": BLUE,
@@ -54,15 +64,19 @@ def setup_style() -> None:
             "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
             "mathtext.fontset": "dejavusans",
             "font.size": 8.0,
-            "axes.titlesize": 8.4,
-            "axes.titleweight": "semibold",
+            "axes.titlesize": 8.2,
+            "axes.titleweight": "bold",
             "axes.titlepad": 4.0,
             "axes.labelsize": 8.0,
             "axes.labelpad": 3.0,
-            "axes.linewidth": 0.65,
+            "axes.linewidth": 0.6,
+            "axes.edgecolor": GRAY,
+            "axes.labelcolor": BLACK,
             "axes.spines.top": False,
             "axes.spines.right": False,
             "axes.axisbelow": True,
+            "xtick.color": BLACK,
+            "ytick.color": BLACK,
             "xtick.labelsize": 7.1,
             "ytick.labelsize": 7.1,
             "xtick.major.size": 3.0,
@@ -71,10 +85,11 @@ def setup_style() -> None:
             "ytick.major.width": 0.6,
             "legend.fontsize": 7.1,
             "legend.frameon": False,
-            "legend.handlelength": 1.8,
+            "legend.handlelength": 1.6,
             "legend.handletextpad": 0.5,
             "legend.columnspacing": 1.1,
-            "lines.linewidth": 1.5,
+            "legend.borderpad": 0.2,
+            "lines.linewidth": 1.45,
             "lines.markersize": 3.2,
             "lines.markeredgewidth": 0.7,
             "lines.solid_capstyle": "round",
@@ -89,9 +104,43 @@ def clean_axes(ax: plt.Axes, *, grid: bool = True) -> None:
     ax.spines["bottom"].set_color(GRAY)
     ax.tick_params(color=GRAY)
     if grid:
-        ax.grid(axis="y", color=LIGHT_GRAY, linewidth=0.5)
+        ax.grid(axis="y", color=LIGHT_GRAY, linewidth=0.45)
     else:
         ax.grid(False)
+
+
+def line_style(
+    color: str,
+    *,
+    linestyle: str = "-",
+    marker: str | None = MARKER,
+) -> dict:
+    """Return the standard curve style."""
+    return {
+        "color": color,
+        "linestyle": linestyle,
+        "marker": marker,
+        "markerfacecolor": MARKER_FACE,
+        "markeredgecolor": color,
+    }
+
+
+def reference_line_style(*, linestyle: str = ":") -> dict:
+    """Return the standard reference-line style."""
+    return {
+        "color": GRAY,
+        "linewidth": REFERENCE_LINEWIDTH,
+        "linestyle": linestyle,
+    }
+
+
+def errorbar_style() -> dict:
+    """Return the standard bar-error style."""
+    return {
+        "ecolor": GRAY,
+        "elinewidth": ERROR_LINEWIDTH,
+        "capsize": ERROR_CAPSIZE,
+    }
 
 
 def _unique_legend(axes: Iterable[plt.Axes]) -> tuple[list, list[str]]:
@@ -115,13 +164,14 @@ def finish_figure(
     """Apply shared legend placement rules to a figure."""
     axes_list = [axes] if isinstance(axes, plt.Axes) else list(np.ravel(axes))
     if legend:
+        fig.subplots_adjust(top=0.82)
         handles, labels = _unique_legend(axes_list)
         if handles:
             fig.legend(
                 handles,
                 labels,
                 loc="upper center",
-                bbox_to_anchor=(0.5, 0.930),
+                bbox_to_anchor=(0.5, 0.965),
                 ncol=min(legend_ncol, len(handles)),
                 borderaxespad=0.0,
             )

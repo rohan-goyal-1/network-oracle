@@ -1,4 +1,4 @@
-"""Compatibility launcher for running study grids.
+"""Compatibility launcher for running simulation grids.
 
 The implementation lives in :mod:`network_oracle.experiments`.
 """
