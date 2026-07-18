@@ -343,14 +343,14 @@ At $N=10$ and $r=0.6$, the independent-signal condition outperforms the common-s
 \section{Adaptive Trust}
 \label{sec:trust}
 
-We next ask whether endogenous trust updating can mitigate a biased static source. Adopters scale $\tau$ by an agreement-based moving average, with base parameters $\varphi=0.7$ and $\tau=2$. Figure~\ref{fig:trust} compares fixed trust with adaptive trust across source accuracy.
+We next ask whether endogenous trust updating can mitigate a biased static source under the common-signal condition (all consulting adopters receive the same within-round draw). Adopters scale $\tau$ by an agreement-based moving average, with base parameters $\varphi=0.7$ and $\tau=2$. Figure~\ref{fig:trust} compares fixed trust with adaptive trust across source accuracy. Independent signals are not re-examined here.
 
 On the cycle, adaptive trust raises correct-consensus rates in a neighborhood of moderately biased sources (near $r\approx 0.40$--$0.45$), where fixed trust leaves the community well below its no-source baseline. On the complete graph, gains under strong bias are smaller, and adaptive trust reduces correct-consensus rates when the source is already reliable ($r\gtrsim 0.7$). The mechanism therefore provides only partial protection: it can help where a biased common source is most damaging on the cycle, but trust withdrawal is imperfect and can discard useful testimony when the source is accurate.
 
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.86\textwidth]{figures/adaptive_trust_under_bias.pdf}
-\caption{Correct-consensus probability under fixed versus adaptive trust in a common static source, across source accuracy $r$, for complete and cycle networks ($\varphi=0.7$, $\tau=2$). Vertical reference line at $r=0.5$. Each point aggregates $1000$ Monte Carlo runs.}
+\caption{Correct-consensus probability under fixed versus adaptive trust for a static source with common (shared within-round) signals, across source accuracy $r$, for complete and cycle networks ($\varphi=0.7$, $\tau=2$). Vertical reference line at $r=0.5$. Each point aggregates $1000$ Monte Carlo runs.}
 \label{fig:trust}
 \end{figure*}
 
